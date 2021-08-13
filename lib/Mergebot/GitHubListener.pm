@@ -5,6 +5,7 @@ use Moose;
 use experimental 'signatures';
 
 use Data::Dumper::Concise;
+use Mergebot::GitHubEvent;
 
 has json_codec => (
   is => 'ro',
@@ -31,11 +32,13 @@ sub handle_request ($self, $req) {
 
   my $data = $self->decode_json($req->content);
 
-  warn Dumper $req->headers;
+  my $event = Mergebot::GitHubEvent->from_plack_request($req);
 
-  warn Dumper $data;
+  unless ($event) {
+    return to_psgi(400, 'malformed request');
+  }
 
-
+  warn Dumper $event;
 
   return [ 200, [], [] ];
 }
