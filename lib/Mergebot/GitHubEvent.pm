@@ -6,6 +6,8 @@ use experimental 'signatures';
 
 use Crypt::Mac::HMAC qw(hmac_hex);
 
+use Mergebot::GitHubEvent::IssueComment;
+
 has [qw(
   type
   id
@@ -33,6 +35,12 @@ sub from_plack_request ($class, $req) {
     type => $req->header('X-GitHub-Event'),
     payload => $payload,
   });
+}
+
+sub as_issue_comment ($self) {
+  # ...I should just write this in Rust.
+  die "lolwut" unless $self->type eq 'issue_comment';
+  return Mergebot::GitHubEvent::IssueComment->from_event($self);
 }
 
 __PACKAGE__->meta->make_immutable;
