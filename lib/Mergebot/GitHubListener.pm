@@ -15,7 +15,7 @@ has hub => (
   is => 'ro',
   required => 1,
   weak_ref => 1,
-  handles => [qw(encode_json decode_json)],
+  handles => [qw(encode_json decode_json signing_secret)],
 );
 
 sub to_psgi ($self, $code, $content) {
@@ -31,7 +31,7 @@ sub handle_request ($self, $req) {
 
   # XXX more guff here
 
-  my $event = Mergebot::GitHubEvent->from_plack_request($req);
+  my $event = Mergebot::GitHubEvent->from_plack_request($req, $self->signing_secret);
 
   unless ($event) {
     return $self->to_psgi(400, 'malformed request');

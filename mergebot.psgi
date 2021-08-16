@@ -5,4 +5,4 @@ use warnings;
 use lib 'lib';
 use Mergebot;
 
-return Mergebot->new->to_app;
+return Mergebot->from_config('mergebot.toml')->to_app;

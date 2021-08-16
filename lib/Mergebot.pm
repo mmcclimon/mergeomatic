@@ -7,10 +7,24 @@ use warnings;
 use IO::Async::Loop;
 use Plack::Request;
 use Plack::Response;
+use TOML::Parser;
 
 use Mergebot::GitHubListener;
 
 use experimental 'signatures';
+
+has [qw(
+  pem_file
+  signing_secret
+)]=> (
+  is => 'ro',
+  required => 1,
+);
+
+sub from_config ($class, $file) {
+  my $cfg = TOML::Parser->new->parse_file($file);
+  return $class->new($cfg);
+}
 
 has json_codec => (
   is => 'ro',
