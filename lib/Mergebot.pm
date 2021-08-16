@@ -4,6 +4,7 @@ package Mergebot;
 use Moose;
 use warnings;
 
+use Crypt::JWT qw(encode_jwt);
 use IO::Async::Loop;
 use Plack::Request;
 use Plack::Response;
@@ -14,6 +15,7 @@ use Mergebot::GitHubListener;
 use experimental 'signatures';
 
 has [qw(
+  app_id
   pem_file
   signing_secret
 )]=> (
@@ -65,6 +67,25 @@ sub to_app ($self) {
 
     return $handler->handle_request($req);
   };
+}
+
+sub generate_access_token ($self) {
+  my $now = time;
+  my $data = {
+    iat => $now - 60,
+    exp => $now + (9 * 60),
+    iss => 0 + $self->app_id,
+  };
+
+  my $private_pem = `cat mergeomatic.2021-08-13.private-key.pem`;
+
+  my $token = encode_jwt(
+    payload => $data,
+    alg => 'RS256',
+    key => \$private_pem,
+  );
+
+  return $token;
 }
 
 __PACKAGE__->meta->make_immutable;

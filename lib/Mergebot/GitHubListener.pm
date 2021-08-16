@@ -62,7 +62,10 @@ sub handle_issue_comment ($self, $event) {
   # ok, so if our body says /mergeomatic merge me, we'll do a thing
   return unless $comment->body eq '/mergeomatic merge me';
 
-  my $job = Mergebot::Job->new({ inciting_comment => $comment });
+  my $job = Mergebot::Job->new({
+    hub => $self->hub,
+    inciting_comment => $comment,
+  });
   $job->run;
 }
 
