@@ -12,18 +12,37 @@ use Mergebot::GitHubListener;
 
 use experimental 'signatures';
 
+has json_codec => (
+  is => 'ro',
+  lazy => 1,
+  default => sub { JSON::MaybeXS->new },
+  handles => {
+    encode_json => 'encode',
+    decode_json => 'decode',
+  },
+);
+
+has handlers => (
+  is => 'ro',
+  lazy => 1,
+  isa => 'HashRef',
+  traits => ['Hash'],
+  default => sub ($self) {
+    return {
+      '/gh' => Mergebot::GitHubListener->new({ hub => $self }),
+    }
+  },
+  handles => {
+    handler_for => 'get',
+  },
+);
+
 sub to_app ($self) {
-  my $gh = Mergebot::GitHubListener->new({ hub => $self });
-
-  my %handler_for = (
-    '/gh' => $gh,
-  );
-
   return sub ($env) {
     my $req = Plack::Request->new($env);
     my $path_info = $req->path_info // '/';
 
-    my $handler = $handler_for{ $path_info };
+    my $handler = $self->handler_for($path_info);
 
     unless ($handler) {
       warn "couldn't find path for $path_info, ignoring\n";

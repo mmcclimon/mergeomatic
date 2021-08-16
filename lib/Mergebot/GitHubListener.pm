@@ -11,7 +11,14 @@ use IO::Async::Process;
 use Mergebot::GitHubEvent;
 use Mergebot::Job;
 
-my sub to_psgi ($self, $code, $content) {
+has hub => (
+  is => 'ro',
+  required => 1,
+  weak_ref => 1,
+  handles => [qw(encode_json decode_json)],
+);
+
+sub to_psgi ($self, $code, $content) {
   my $res = Plack::Response->new($code);
   $res->content_type('application/json');
   $res->body($self->encode_json($content));
@@ -27,7 +34,7 @@ sub handle_request ($self, $req) {
   my $event = Mergebot::GitHubEvent->from_plack_request($req);
 
   unless ($event) {
-    return to_psgi(400, 'malformed request');
+    return $self->to_psgi(400, 'malformed request');
   }
 
   $self->maybe_handle_event($event);
